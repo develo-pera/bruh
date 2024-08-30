@@ -1,18 +1,9 @@
-import { useConnect } from "wagmi";
-import { config } from "../wagmiConfig"
-import { injected } from "wagmi/connectors";
-
 export default function Home() {
-  const { connect } = useConnect({ config });
-
   return (
     <main className="max-w-[1000px] mx-auto px-4 py-20">
       <div className="flex items-center justify-between">
         <p className="text-4xl">Hello Simple Solidity</p>
-        <div onClick={() => {
-          console.log("click")
-          connect({ connector: injected() })
-        }} className="py-3 px-8 bg-zinc-800 text-center cursor-pointer">Connect</div>
+        <div className="py-3 px-8 bg-zinc-800 text-center cursor-pointer">Connect</div>
       </div>
 
       <p className="text-2xl my-20">Lorem ipusm...</p>
