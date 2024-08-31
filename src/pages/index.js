@@ -1,10 +1,9 @@
+import { useEffect, useState } from "react";
 import truncateEthAddress from "truncate-eth-address";
 import { useConnect, useAccount, useReadContract, useWriteContract, useSendTransaction } from "wagmi";
 import { injected } from "wagmi/connectors";
 import SimpleSolidityJSON from "../../SimpleSolidityABI.json";
 import { parseEther } from "viem";
-import { useState } from "react";
-
 
 const SimpleSolidityContractAddress = "0x1DbB9BA2cB0F77c76Ae7755d99316e2A464ED581";
 
@@ -12,38 +11,47 @@ export default function Home() {
   const [donationAmount, setDonationAmount] = useState();
   const { connect } = useConnect();
   const { address } = useAccount();
-  const { writeContract } = useWriteContract()
-  const { sendTransaction } = useSendTransaction()
-  const likeCount = useReadContract({
+  const [isMounted, setIsMounted] = useState();
+  const { writeContract } = useWriteContract();
+  const { sendTransaction } = useSendTransaction();
+  const likesCount = useReadContract({
     abi: SimpleSolidityJSON.abi,
     address: SimpleSolidityContractAddress,
     functionName: "likesCount"
-  })
-  const dislikeCount = useReadContract({
+  });
+  const dislikesCount = useReadContract({
     abi: SimpleSolidityJSON.abi,
     address: SimpleSolidityContractAddress,
     functionName: "dislikesCount"
   })
+  const message = useReadContract({
+    abi: SimpleSolidityJSON.abi,
+    address: SimpleSolidityContractAddress,
+    functionName: "message"
+  })
 
-  const like = async () => {
-    const result = await writeContract({
+  useEffect(() => (
+    setIsMounted(true)
+  ), []);
+
+  const like = () => {
+    writeContract({
       abi: SimpleSolidityJSON.abi,
       address: SimpleSolidityContractAddress,
-      functionName: 'like',
+      functionName: 'like'
     })
   }
 
-  const dislike = async () => {
-    return writeContract({
+  const dislike = () => {
+    writeContract({
       abi: SimpleSolidityJSON.abi,
       address: SimpleSolidityContractAddress,
-      functionName: 'dislike',
+      functionName: 'dislike'
     })
   }
 
-  const donate = async (value) => {
-    console.log(parseEther(value))
-    sendTransaction({ to: "0x3Dd0ff6f14790f97a1176C6851e85A6BeC132571", value: parseEther(value) })
+  const donate = (amount) => {
+    sendTransaction({ to: SimpleSolidityContractAddress, value: parseEther(amount) })
   }
 
   return (
@@ -51,16 +59,18 @@ export default function Home() {
       <div className="flex items-center justify-between">
         <p className="text-4xl">Hello Simple Solidity</p>
         {
-          address ?
-            <p>{truncateEthAddress(address)}</p> :
-            <div onClick={() => connect({ connector: injected() })} className="py-3 px-8 bg-zinc-800 cursor-pointer">Connect</div>
+          isMounted && (
+            address ?
+              <p>{truncateEthAddress(address)}</p> :
+              <div onClick={() => connect({ connector: injected() })} className="py-3 px-8 bg-zinc-800 cursor-pointer">Connect</div>
+          )
         }
       </div>
 
-      <p className="text-2xl my-20">Lorem ipsum...</p>
+      <p className="text-2xl my-20">{message.data}</p>
       <div className="flex items-center gap-5">
-        <p>{Number(likeCount.data)} likes</p>
-        <p>{Number(dislikeCount.data)} dislikes</p>
+        <p>{Number(likesCount.data)} likes</p>
+        <p>{Number(dislikesCount.data)} dislikes</p>
       </div>
       <div className="flex items-center gap-5 mt-5">
         <div onClick={like} className="py-3 w-[200px] bg-blue-500 text-center cursor-pointer">Like</div>
