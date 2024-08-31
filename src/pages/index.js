@@ -1,18 +1,50 @@
 import truncateEthAddress from "truncate-eth-address";
-import { useConnect, useAccount, useReadContract, useChainId } from "wagmi";
+import { useConnect, useAccount, useReadContract, useWriteContract, useSendTransaction } from "wagmi";
 import { injected } from "wagmi/connectors";
 import SimpleSolidityJSON from "../../SimpleSolidityABI.json";
+import { parseEther } from "viem";
+import { useState } from "react";
 
-const SimpleSolidityContractAddress = "0xd0eFE13123E4077371B6A23d54cB0634C95D4b37";
+
+const SimpleSolidityContractAddress = "0x1DbB9BA2cB0F77c76Ae7755d99316e2A464ED581";
 
 export default function Home() {
+  const [donationAmount, setDonationAmount] = useState();
   const { connect } = useConnect();
   const { address } = useAccount();
-  const result = useReadContract({
+  const { writeContract } = useWriteContract()
+  const { sendTransaction } = useSendTransaction()
+  const likeCount = useReadContract({
     abi: SimpleSolidityJSON.abi,
     address: SimpleSolidityContractAddress,
     functionName: "likesCount"
   })
+  const dislikeCount = useReadContract({
+    abi: SimpleSolidityJSON.abi,
+    address: SimpleSolidityContractAddress,
+    functionName: "dislikesCount"
+  })
+
+  const like = async () => {
+    const result = await writeContract({
+      abi: SimpleSolidityJSON.abi,
+      address: SimpleSolidityContractAddress,
+      functionName: 'like',
+    })
+  }
+
+  const dislike = async () => {
+    return writeContract({
+      abi: SimpleSolidityJSON.abi,
+      address: SimpleSolidityContractAddress,
+      functionName: 'dislike',
+    })
+  }
+
+  const donate = async (value) => {
+    console.log(parseEther(value))
+    sendTransaction({ to: "0x3Dd0ff6f14790f97a1176C6851e85A6BeC132571", value: parseEther(value) })
+  }
 
   return (
     <main className="max-w-[1000px] mx-auto px-4 py-20">
@@ -27,19 +59,19 @@ export default function Home() {
 
       <p className="text-2xl my-20">Lorem ipsum...</p>
       <div className="flex items-center gap-5">
-        <p>{Number(result.data)} likes</p>
-        <p>100 dislikes</p>
+        <p>{Number(likeCount.data)} likes</p>
+        <p>{Number(dislikeCount.data)} dislikes</p>
       </div>
       <div className="flex items-center gap-5 mt-5">
-        <div className="py-3 w-[200px] bg-blue-500 text-center cursor-pointer">Like</div>
-        <div className="py-3 w-[200px] bg-red-700 text-center cursor-pointer">Dislike</div>
+        <div onClick={like} className="py-3 w-[200px] bg-blue-500 text-center cursor-pointer">Like</div>
+        <div onClick={dislike} className="py-3 w-[200px] bg-red-700 text-center cursor-pointer">Dislike</div>
       </div>
 
       <div className="mt-32">
         <p className="mb-3">If you really like this message, but me a coffee</p>
         <div className="flex intes-center gap-5">
-          <input className="py-3 text-black w-full max-w-[500px]" type="number" placeholder="Donation amount in ETH" />
-          <div className="py-3 w-[200px] bg-white text-black text-center cursor-pointer">Donate</div>
+          <input value={donationAmount} onChange={(e) => setDonationAmount(e.target.value)} className="py-3 text-black w-full max-w-[500px]" type="number" placeholder="Donation amount in ETH" />
+          <div onClick={() => donate(donationAmount)} className="py-3 w-[200px] bg-white text-black text-center cursor-pointer">Donate</div>
         </div>
       </div>
     </main>

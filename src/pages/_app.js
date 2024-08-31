@@ -1,8 +1,16 @@
 import "@/styles/globals.scss";
 
-import { config } from "../wagmiConfig"
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { WagmiProvider } from 'wagmi'
+
+import { createConfig, http, WagmiProvider } from "wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { sepolia } from "viem/chains";
+
+const config = createConfig({
+  chains: [sepolia],
+  transports: {
+    [sepolia.id]: http(),
+  }
+});
 
 const queryClient = new QueryClient()
 
